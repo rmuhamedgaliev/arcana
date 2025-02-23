@@ -1,2 +1,0 @@
-# arcana
-Text game engine

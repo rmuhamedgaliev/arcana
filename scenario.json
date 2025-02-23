@@ -1,0 +1,205 @@
+{
+  "initialAttributes": {
+    "health": 100,
+    "gold": 500,
+    "food": 200,
+    "army": 100,
+    "reputation": 50
+  },
+  "quests": [
+    {
+      "id": "start",
+      "description": "Вы — король небольшого королевства. Вам предстоит принимать сложные решения, чтобы спасти свое королевство от краха.",
+      "actions": [
+        {
+          "description": "Начать правление",
+          "command": "start",
+          "effect": {
+            "nextQuest": "day1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "day1",
+      "description": "Утро первого дня. К вам приходит советник с докладом: запасы еды заканчиваются, а казна почти пуста.",
+      "actions": [
+        {
+          "description": "Увеличить налоги",
+          "command": "tax",
+          "effect": {
+            "setAttribute": {
+              "gold": 200,
+              "reputation": -20
+            },
+            "nextQuest": "day2"
+          }
+        },
+        {
+          "description": "Попросить помощи у соседей",
+          "command": "help",
+          "effect": {
+            "setAttribute": {
+              "food": 100,
+              "reputation": 10
+            },
+            "nextQuest": "day2"
+          }
+        },
+        {
+          "description": "Игнорировать проблему",
+          "command": "ignore",
+          "effect": {
+            "setAttribute": {
+              "food": -50,
+              "reputation": -10
+            },
+            "nextQuest": "day2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "day2",
+      "description": "На второй день к вам приходит генерал: армия требует оплаты, иначе солдаты начнут бунт.",
+      "actions": [
+        {
+          "description": "Выплатить жалование",
+          "command": "pay",
+          "effect": {
+            "setAttribute": {
+              "gold": -100,
+              "army": 20
+            },
+            "nextQuest": "day3"
+          }
+        },
+        {
+          "description": "Отказать армии",
+          "command": "refuse",
+          "effect": {
+            "setAttribute": {
+              "army": -50,
+              "reputation": -30
+            },
+            "nextQuest": "day3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "day3",
+      "description": "На третий день к вам приходит посол от варваров: они требуют дань, угрожая нападением.",
+      "actions": [
+        {
+          "description": "Заплатить дань",
+          "command": "pay_tribute",
+          "effect": {
+            "setAttribute": {
+              "gold": -300,
+              "reputation": -10
+            },
+            "nextQuest": "day4"
+          }
+        },
+        {
+          "description": "Отказать и подготовиться к войне",
+          "command": "war",
+          "effect": {
+            "setAttribute": {
+              "army": -50,
+              "reputation": 20
+            },
+            "nextQuest": "day4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "day4",
+      "description": "На четвертый день вы узнаете, что в королевстве начался голод.",
+      "actions": [
+        {
+          "description": "Раздать еду народу",
+          "command": "feed",
+          "effect": {
+            "setAttribute": {
+              "food": -100,
+              "reputation": 30
+            },
+            "nextQuest": "day5"
+          }
+        },
+        {
+          "description": "Сохранить еду для армии",
+          "command": "save",
+          "effect": {
+            "setAttribute": {
+              "food": 50,
+              "reputation": -20
+            },
+            "nextQuest": "day5"
+          }
+        }
+      ]
+    },
+    {
+      "id": "day5",
+      "description": "На пятый день вы узнаете, что варвары готовятся к нападению.",
+      "actions": [
+        {
+          "description": "Подготовить армию к обороне",
+          "command": "defend",
+          "effect": {
+            "setAttribute": {
+              "army": 50,
+              "gold": -100
+            },
+            "nextQuest": "final"
+          }
+        },
+        {
+          "description": "Попытаться договориться с варварами",
+          "command": "negotiate",
+          "effect": {
+            "setAttribute": {
+              "gold": -200,
+              "reputation": 10
+            },
+            "nextQuest": "final"
+          }
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "description": "Финальный день. Вы сталкиваетесь с последствиями своих решений.",
+      "actions": []
+    }
+  ],
+  "endConditions": [
+    {
+      "type": "attribute",
+      "attribute": "health",
+      "value": 0,
+      "message": "Вы умерли от стресса. Королевство погрузилось в хаос."
+    },
+    {
+      "type": "attribute",
+      "attribute": "reputation",
+      "value": 0,
+      "message": "Народ восстал против вас. Вы свергнуты."
+    },
+    {
+      "type": "attribute",
+      "attribute": "gold",
+      "value": -100,
+      "message": "Казна опустела. Королевство обанкротилось."
+    },
+    {
+      "type": "step",
+      "step": "final",
+      "message": "Вы успешно правили королевством, но последствия ваших решений будут преследовать вас."
+    }
+  ]
+}

@@ -4,14 +4,16 @@ import io.github.rmuhamedgaliev.arcana.core.GameInterface;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TelegramInterface extends TelegramLongPollingBot implements GameInterface {
     private final String botToken;
@@ -20,6 +22,7 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
     private Long currentChatId;
     private boolean isGameStarted = false;
     private final Runnable restartAction;
+    private static final Pattern OPTION_PATTERN = Pattern.compile("^(\\d+)\\.");
 
     public TelegramInterface(String botToken, String botUsername, Runnable restartAction) {
         this.botToken = botToken;
@@ -29,6 +32,17 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
 
     @Override
     public void onUpdateReceived(Update update) {
+        if (update.hasCallbackQuery()) {
+            // Обработка нажатий на inline кнопки
+            String callbackData = update.getCallbackQuery().getData();
+            currentChatId = update.getCallbackQuery().getMessage().getChatId();
+
+            if (isGameStarted) {
+                inputQueue.offer(callbackData);
+            }
+            return;
+        }
+
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
             currentChatId = update.getMessage().getChatId();
@@ -39,10 +53,7 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
                 return;
             }
 
-            // Добавляем ввод в очередь только если игра запущена
-            if (isGameStarted) {
-                inputQueue.offer(messageText);
-            } else {
+            if (!isGameStarted) {
                 sendMessage("Используйте /start для начала игры или /restart для перезапуска");
             }
         }
@@ -52,20 +63,8 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
         SendMessage message = new SendMessage();
         message.setChatId(currentChatId.toString());
         message.setText("Добро пожаловать в игру!\n" +
-                "Следуйте инструкциям и используйте цифры для выбора действий.\n" +
+                "Нажимайте на кнопки под сообщениями для выбора действий.\n" +
                 "Игра начинается...");
-
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add("/start");
-        row1.add("/restart");
-        keyboard.add(row1);
-
-        keyboardMarkup.setKeyboard(keyboard);
-        keyboardMarkup.setResizeKeyboard(true);
-        message.setReplyMarkup(keyboardMarkup);
 
         try {
             execute(message);
@@ -85,6 +84,12 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
                 message += "\n\nИспользуйте /start для новой игры или /restart для перезапуска";
             }
 
+            // Создаем inline кнопки для вариантов выбора
+            InlineKeyboardMarkup markupInline = createInlineKeyboard(message);
+            if (markupInline != null) {
+                sendMessage.setReplyMarkup(markupInline);
+            }
+
             sendMessage.setText(message);
 
             try {
@@ -93,6 +98,37 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
                 e.printStackTrace();
             }
         }
+    }
+
+    private InlineKeyboardMarkup createInlineKeyboard(String message) {
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        String[] lines = message.split("\n");
+        boolean hasOptions = false;
+
+        for (String line : lines) {
+            Matcher matcher = OPTION_PATTERN.matcher(line);
+            if (matcher.find()) {
+                hasOptions = true;
+                String number = matcher.group(1);
+                String text = line.substring(line.indexOf(".") + 1).trim();
+
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText(text);
+                button.setCallbackData(number);
+
+                List<InlineKeyboardButton> row = new ArrayList<>();
+                row.add(button);
+                rows.add(row);
+            }
+        }
+
+        if (!hasOptions) {
+            return null;
+        }
+
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(rows);
+        return markupInline;
     }
 
     @Override
@@ -119,8 +155,8 @@ public class TelegramInterface extends TelegramLongPollingBot implements GameInt
         isGameStarted = gameStarted;
         if (gameStarted) {
             showStartMessage();
-            inputQueue.clear(); // Очищаем очередь перед началом новой игры
-            inputQueue.offer(""); // Добавляем пустую команду, чтобы запустить игру
+            inputQueue.clear();
+            inputQueue.offer("");
         }
     }
 

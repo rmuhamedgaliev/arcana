@@ -1,0 +1,359 @@
+{
+  "id": "adventure",
+  "defaultLanguage": "en",
+  "initialAttributes": {
+    "health": 100,
+    "gold": 0
+  },
+  "startQuestId": "start",
+  "quests": [
+    {
+      "id": "start",
+      "text": "You are standing at the entrance of a dark cave. What do you want to do?",
+      "actions": [
+        {
+          "text": "Enter the cave",
+          "nextScene": "cave"
+        },
+        {
+          "text": "Look around",
+          "nextScene": "forest"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "cave",
+      "text": "Inside the cave, you find a treasure chest and a sleeping dragon.",
+      "actions": [
+        {
+          "text": "Try to open the chest quietly",
+          "nextScene": "chest"
+        },
+        {
+          "text": "Leave the cave",
+          "nextScene": "start"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "chest",
+      "text": "You open the chest and find 100 gold coins! But the noise wakes up the dragon.",
+      "actions": [
+        {
+          "text": "Run away",
+          "nextScene": "escape"
+        },
+        {
+          "text": "Fight the dragon",
+          "nextScene": "dragon_fight"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "gold": "100"
+      }
+    },
+    {
+      "id": "dragon_fight",
+      "text": "You try to fight the dragon. It's a tough battle!",
+      "actions": [
+        {
+          "text": "Run away",
+          "nextScene": "escape"
+        },
+        {
+          "text": "Use your sword",
+          "nextScene": "dragon_victory",
+          "condition": "gold >= 50"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "health": "-50"
+      }
+    },
+    {
+      "id": "dragon_victory",
+      "text": "With a mighty swing of your sword, you defeat the dragon! The villagers will be thrilled to hear of your victory.",
+      "actions": [
+        {
+          "text": "Return to the village as a hero",
+          "nextScene": "victory"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "gold": "200"
+      }
+    },
+    {
+      "id": "escape",
+      "text": "You manage to escape from the cave with your treasure.",
+      "actions": [
+        {
+          "text": "Go back to the forest",
+          "nextScene": "forest"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "forest",
+      "text": "You are in a beautiful forest. You see a path leading to a village.",
+      "actions": [
+        {
+          "text": "Go to the village",
+          "nextScene": "village"
+        },
+        {
+          "text": "Go back to the cave entrance",
+          "nextScene": "start"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "village",
+      "text": "You reach a peaceful village. The villagers welcome you.",
+      "actions": [
+        {
+          "text": "Rest and heal",
+          "nextScene": "heal"
+        },
+        {
+          "text": "Buy equipment",
+          "nextScene": "shop",
+          "condition": "gold >= 50"
+        },
+        {
+          "text": "Speak with the village elder",
+          "nextScene": "village_quest"
+        },
+        {
+          "text": "Leave the village",
+          "nextScene": "forest"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "heal",
+      "text": "You rest at the village inn and recover your health.",
+      "actions": [
+        {
+          "text": "Go back to the village",
+          "nextScene": "village"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "health": "100"
+      }
+    },
+    {
+      "id": "shop",
+      "text": "You buy a powerful sword for 50 gold coins.",
+      "actions": [
+        {
+          "text": "Go back to the village",
+          "nextScene": "village"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "gold": "-50"
+      }
+    },
+    {
+      "id": "village_quest",
+      "text": "The village elder asks for your help. A group of bandits has been terrorizing the village. Will you help?",
+      "actions": [
+        {
+          "text": "Accept the quest",
+          "nextScene": "bandits"
+        },
+        {
+          "text": "Decline and return to the village",
+          "nextScene": "village"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {}
+    },
+    {
+      "id": "bandits",
+      "text": "You track down the bandits to their hideout and defeat them. The village is safe now!",
+      "actions": [
+        {
+          "text": "Return to the village as a hero",
+          "nextScene": "victory"
+        }
+      ],
+      "isEnd": false,
+      "attributes": {
+        "gold": "150"
+      }
+    },
+    {
+      "id": "victory",
+      "text": "Congratulations! You have completed your adventure and become a hero. The villagers celebrate your bravery and achievements.",
+      "actions": [
+        {
+          "text": "Start a new adventure",
+          "nextScene": "start"
+        }
+      ],
+      "isEnd": true,
+      "attributes": {}
+    }
+  ],
+  "localizations": [
+    {
+      "language": "en",
+      "title": "Adventure in the Dark Cave",
+      "description": "Explore a mysterious cave and find treasures.",
+      "questTexts": {
+        "start": "You are standing at the entrance of a dark cave. What do you want to do?",
+        "cave": "Inside the cave, you find a treasure chest and a sleeping dragon.",
+        "chest": "You open the chest and find 100 gold coins! But the noise wakes up the dragon.",
+        "dragon_fight": "You try to fight the dragon. It's a tough battle!",
+        "dragon_victory": "With a mighty swing of your sword, you defeat the dragon! The villagers will be thrilled to hear of your victory.",
+        "escape": "You manage to escape from the cave with your treasure.",
+        "forest": "You are in a beautiful forest. You see a path leading to a village.",
+        "village": "You reach a peaceful village. The villagers welcome you.",
+        "heal": "You rest at the village inn and recover your health.",
+        "shop": "You buy a powerful sword for 50 gold coins.",
+        "village_quest": "The village elder asks for your help. A group of bandits has been terrorizing the village. Will you help?",
+        "bandits": "You track down the bandits to their hideout and defeat them. The village is safe now!",
+        "victory": "Congratulations! You have completed your adventure and become a hero. The villagers celebrate your bravery and achievements."
+      },
+      "actionTexts": {
+        "start": {
+          "0": "Enter the cave",
+          "1": "Look around"
+        },
+        "cave": {
+          "0": "Try to open the chest quietly",
+          "1": "Leave the cave"
+        },
+        "chest": {
+          "0": "Run away",
+          "1": "Fight the dragon"
+        },
+        "dragon_fight": {
+          "0": "Run away",
+          "1": "Use your sword"
+        },
+        "dragon_victory": {
+          "0": "Return to the village as a hero"
+        },
+        "escape": {
+          "0": "Go back to the forest"
+        },
+        "forest": {
+          "0": "Go to the village",
+          "1": "Go back to the cave entrance"
+        },
+        "village": {
+          "0": "Rest and heal",
+          "1": "Buy equipment",
+          "2": "Speak with the village elder",
+          "3": "Leave the village"
+        },
+        "heal": {
+          "0": "Go back to the village"
+        },
+        "shop": {
+          "0": "Go back to the village"
+        },
+        "village_quest": {
+          "0": "Accept the quest",
+          "1": "Decline and return to the village"
+        },
+        "bandits": {
+          "0": "Return to the village as a hero"
+        },
+        "victory": {
+          "0": "Start a new adventure"
+        }
+      }
+    },
+    {
+      "language": "ru",
+      "title": "Приключение в Темной Пещере",
+      "description": "Исследуйте таинственную пещеру и найдите сокровища.",
+      "questTexts": {
+        "start": "Вы стоите у входа в темную пещеру. Что вы хотите сделать?",
+        "cave": "Внутри пещеры вы находите сундук с сокровищами и спящего дракона.",
+        "chest": "Вы открываете сундук и находите 100 золотых монет! Но шум будит дракона.",
+        "dragon_fight": "Вы пытаетесь сразиться с драконом. Это тяжелая битва!",
+        "dragon_victory": "Могучим ударом меча вы побеждаете дракона! Жители деревни будут в восторге от вашей победы.",
+        "escape": "Вам удается сбежать из пещеры с сокровищами.",
+        "forest": "Вы находитесь в красивом лесу. Вы видите тропинку, ведущую в деревню.",
+        "village": "Вы достигаете мирной деревни. Жители приветствуют вас.",
+        "heal": "Вы отдыхаете в деревенской гостинице и восстанавливаете здоровье.",
+        "shop": "Вы покупаете мощный меч за 50 золотых монет.",
+        "village_quest": "Старейшина деревни просит вашей помощи. Группа бандитов терроризирует деревню. Вы поможете?",
+        "bandits": "Вы выслеживаете бандитов до их убежища и побеждаете их. Деревня теперь в безопасности!",
+        "victory": "Поздравляем! Вы завершили свое приключение и стали героем. Жители деревни празднуют вашу храбрость и достижения."
+      },
+      "actionTexts": {
+        "start": {
+          "0": "Войти в пещеру",
+          "1": "Осмотреться вокруг"
+        },
+        "cave": {
+          "0": "Попытаться тихо открыть сундук",
+          "1": "Покинуть пещеру"
+        },
+        "chest": {
+          "0": "Убежать",
+          "1": "Сразиться с драконом"
+        },
+        "dragon_fight": {
+          "0": "Убежать",
+          "1": "Использовать меч"
+        },
+        "dragon_victory": {
+          "0": "Вернуться в деревню как герой"
+        },
+        "escape": {
+          "0": "Вернуться в лес"
+        },
+        "forest": {
+          "0": "Пойти в деревню",
+          "1": "Вернуться ко входу в пещеру"
+        },
+        "village": {
+          "0": "Отдохнуть и исцелиться",
+          "1": "Купить снаряжение",
+          "2": "Поговорить со старейшиной деревни",
+          "3": "Покинуть деревню"
+        },
+        "heal": {
+          "0": "Вернуться в деревню"
+        },
+        "shop": {
+          "0": "Вернуться в деревню"
+        },
+        "village_quest": {
+          "0": "Принять задание",
+          "1": "Отказаться и вернуться в деревню"
+        },
+        "bandits": {
+          "0": "Вернуться в деревню как герой"
+        },
+        "victory": {
+          "0": "Начать новое приключение"
+        }
+      }
+    }
+  ]
+}

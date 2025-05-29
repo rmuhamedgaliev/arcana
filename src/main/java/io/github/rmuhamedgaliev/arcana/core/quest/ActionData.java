@@ -2,33 +2,85 @@ package io.github.rmuhamedgaliev.arcana.core.quest;
 
 import java.util.Map;
 
+/**
+ * Class representing an action in a quest.
+ * This is used for loading actions from JSON.
+ */
 public class ActionData {
-    private String description;
-    private String command;
-    private Map<String, Object> effect;
+    private String text;
+    private String nextScene;
+    private String condition;
 
-    // Геттеры и сеттеры
-    public String getDescription() {
-        return description;
+    /**
+     * Default constructor for Jackson.
+     */
+    public ActionData() {
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    /**
+     * Create a new action data.
+     *
+     * @param text      The text for the action
+     * @param nextScene The ID of the next scene
+     * @param condition The condition for the action to be available
+     */
+    public ActionData(String text, String nextScene, String condition) {
+        this.text = text;
+        this.nextScene = nextScene;
+        this.condition = condition;
     }
 
-    public String getCommand() {
-        return command;
+    /**
+     * Get the text for the action.
+     *
+     * @return The text
+     */
+    public String getText() {
+        return text;
     }
 
-    public void setCommand(String command) {
-        this.command = command;
+    /**
+     * Set the text for the action.
+     *
+     * @param text The text to set
+     */
+    public void setText(String text) {
+        this.text = text;
     }
 
-    public Map<String, Object> getEffect() {
-        return effect;
+    /**
+     * Get the ID of the next scene.
+     *
+     * @return The next scene ID
+     */
+    public String getNextScene() {
+        return nextScene;
     }
 
-    public void setEffect(Map<String, Object> effect) {
-        this.effect = effect;
+    /**
+     * Set the ID of the next scene.
+     *
+     * @param nextScene The next scene ID to set
+     */
+    public void setNextScene(String nextScene) {
+        this.nextScene = nextScene;
+    }
+
+    /**
+     * Get the condition for the action to be available.
+     *
+     * @return The condition
+     */
+    public String getCondition() {
+        return condition;
+    }
+
+    /**
+     * Set the condition for the action to be available.
+     *
+     * @param condition The condition to set
+     */
+    public void setCondition(String condition) {
+        this.condition = condition;
     }
 }

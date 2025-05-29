@@ -1,12 +1,15 @@
-package io.github.rmuhamedgaliev.arcana.core;
+package io.github.rmuhamedgaliev.arcana.core.ports;
+
+import io.github.rmuhamedgaliev.arcana.core.Language;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Interface for game user interfaces (console, Telegram, etc.).
- * This interface defines methods for communication between the game engine and the user interface.
+ * Output port interface for the game engine.
+ * This interface defines methods for the game engine to interact with the outside world (UI).
  */
-public interface GameInterface {
+public interface GameOutputPort {
     /**
      * Send a message to the user.
      *
@@ -36,4 +39,11 @@ public interface GameInterface {
      * @param language The language to set
      */
     void setCurrentLanguage(Language language);
+
+    /**
+     * Display player status.
+     *
+     * @param attributes The player attributes to display
+     */
+    void displayPlayerStatus(Map<String, Integer> attributes);
 }

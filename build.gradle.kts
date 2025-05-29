@@ -1,6 +1,7 @@
 plugins {
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.google.cloud.tools.jib") version "3.4.0"
 }
 
 repositories {
@@ -37,6 +38,20 @@ tasks {
         options.encoding = "UTF-8"
         options.release.set(23)
     }
+
+    register("buildImage") {
+        dependsOn("shadowJar")
+        dependsOn("jibDockerBuild")
+        description = "Builds the application and creates a Docker/Podman image"
+        group = "build"
+    }
+
+    register("pushImage") {
+        dependsOn("shadowJar")
+        dependsOn("jib")
+        description = "Builds the application and pushes the Docker/Podman image to a registry"
+        group = "publishing"
+    }
 }
 
 java {
@@ -44,5 +59,22 @@ java {
     targetCompatibility = JavaVersion.VERSION_23
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(23))
+    }
+}
+
+jib {
+    from {
+        image = "eclipse-temurin:23-jre-alpine"
+    }
+    to {
+        image = "arcana-bot"
+        tags = setOf("latest")
+    }
+    container {
+        mainClass = application.mainClass.get()
+        ports = listOf("8080")
+        volumes = listOf("/app/games")
+        environment = mapOf("GAMES_DIRECTORY" to "/app/games")
+        creationTime.set("USE_CURRENT_TIMESTAMP")
     }
 }

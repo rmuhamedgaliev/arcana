@@ -9,7 +9,8 @@ repositories {
 }
 
 application {
-    mainClass.set("io.github.rmuhamedgaliev.arcana.TelegramGameLauncher")
+    mainClass.set("io.github.rmuhamedgaliev.arcana.Main")
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 
 dependencies {
@@ -32,11 +33,12 @@ tasks {
 
     test {
         useJUnitPlatform()
+        jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
 
     withType<JavaCompile> {
         options.encoding = "UTF-8"
-        options.release.set(23)
+        options.release.set(24)
     }
 
     register("buildImage") {
@@ -55,16 +57,16 @@ tasks {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_23
-    targetCompatibility = JavaVersion.VERSION_23
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(23))
+        languageVersion.set(JavaLanguageVersion.of(24))
     }
 }
 
 jib {
     from {
-        image = "eclipse-temurin:23-jre-alpine"
+        image = "quay.io/lib/eclipse-temurin:24-jre"
     }
     to {
         image = "arcana-bot"
@@ -72,6 +74,7 @@ jib {
     }
     container {
         mainClass = application.mainClass.get()
+        jvmFlags = listOf("--enable-native-access=ALL-UNNAMED")
         ports = listOf("8080")
         volumes = listOf("/app/games")
         environment = mapOf("GAMES_DIRECTORY" to "/app/games")

@@ -1,4 +1,10 @@
+import org.gradle.jvm.toolchain.JvmVendorSpec
+import org.gradle.api.JavaVersion
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    kotlin("jvm") version "2.1.21"
+    kotlin("plugin.serialization") version "2.1.21"
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("com.google.cloud.tools.jib") version "3.4.0"
@@ -9,18 +15,42 @@ repositories {
 }
 
 application {
-    mainClass.set("io.github.rmuhamedgaliev.arcana.Main")
+    mainClass.set("io.github.rmuhamedgaliev.arcana.MainKt")
     applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 
 dependencies {
+    // Kotlin
+    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+
+    // Jackson for JSON
     implementation("com.fasterxml.jackson.core:jackson-core:2.18.2")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-    implementation("org.telegram:telegrambots:6.9.7.1")
-    implementation("org.xerial:sqlite-jdbc:3.45.2.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.18.2")
 
+    // Database
+    implementation("com.h2database:h2:2.2.224") // H2 Database
+    implementation("com.zaxxer:HikariCP:5.1.0") // Connection pooling
+
+    // Telegram Bot API
+    implementation("org.telegram:telegrambots:6.9.7.1")
+
+    // Logging
+    implementation("org.slf4j:slf4j-api:2.0.11")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
+    implementation("ch.qos.logback:logback-classic:1.4.14")
+
+    // Testing
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.22")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.9.0")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
+    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.kotest:kotest-property:5.8.0")
 }
 
 tasks {
@@ -38,7 +68,14 @@ tasks {
 
     withType<JavaCompile> {
         options.encoding = "UTF-8"
-        options.release.set(24)
+        options.release.set(21)
+    }
+
+    withType<KotlinCompile> {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) // Must match jvmToolchain
+            freeCompilerArgs.add("-Xjsr305=strict")
+        }
     }
 
     register("buildImage") {
@@ -57,16 +94,17 @@ tasks {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_24
-    targetCompatibility = JavaVersion.VERSION_24
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(24))
-    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 jib {
     from {
-        image = "quay.io/lib/eclipse-temurin:24-jre"
+        image = "quay.io/lib/eclipse-temurin:21-jre"
     }
     to {
         image = "arcana-bot"

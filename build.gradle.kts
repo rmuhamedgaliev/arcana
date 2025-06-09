@@ -1,5 +1,3 @@
-import org.gradle.jvm.toolchain.JvmVendorSpec
-import org.gradle.api.JavaVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -51,6 +49,9 @@ dependencies {
     testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core:5.8.0")
     testImplementation("io.kotest:kotest-property:5.8.0")
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
 }
 
 tasks {
@@ -66,10 +67,6 @@ tasks {
         jvmArgs("--enable-native-access=ALL-UNNAMED")
     }
 
-    withType<JavaCompile> {
-        options.encoding = "UTF-8"
-        options.release.set(21)
-    }
 
     withType<KotlinCompile> {
         compilerOptions {
@@ -93,10 +90,6 @@ tasks {
     }
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
 
 kotlin {
     jvmToolchain(21)

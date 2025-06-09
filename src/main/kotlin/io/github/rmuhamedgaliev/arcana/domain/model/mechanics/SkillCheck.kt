@@ -8,7 +8,7 @@ import kotlin.random.Random
  * Class representing a skill check in the game.
  * A skill check is a test of a player's attribute against a difficulty value.
  */
-data class SkillCheck(
+open class SkillCheck(
     val id: String = UUID.randomUUID().toString(),
     val attributeName: String,
     val difficulty: Int,
@@ -30,7 +30,7 @@ data class SkillCheck(
         val attributeValue = player.getAttribute(attributeName)
         val roll = rollDice()
         val totalRoll = roll + attributeValue + bonusModifier
-        
+
         return when {
             // Critical success
             roll >= criticalSuccessThreshold && criticalSuccessOutcome != null -> {
@@ -50,13 +50,13 @@ data class SkillCheck(
             }
         }
     }
-    
+
     /**
      * Roll a 20-sided die.
      *
      * @return A random number between 1 and 20
      */
-    private fun rollDice(): Int {
+    protected open fun rollDice(): Int {
         return Random.nextInt(1, 21)
     }
 }
@@ -80,7 +80,7 @@ data class SkillCheckOutcome(
     fun addMetadata(key: String, value: String) {
         metadata[key] = value
     }
-    
+
     /**
      * Get metadata from the outcome.
      *
@@ -105,42 +105,42 @@ class SkillCheckBuilder {
     private lateinit var failureOutcome: SkillCheckOutcome
     private var criticalSuccessOutcome: SkillCheckOutcome? = null
     private var criticalFailureOutcome: SkillCheckOutcome? = null
-    
+
     /**
      * Set the attribute to check.
      */
     fun attribute(name: String) {
         attributeName = name
     }
-    
+
     /**
      * Set the difficulty of the check.
      */
     fun difficulty(value: Int) {
         difficulty = value
     }
-    
+
     /**
      * Set the bonus modifier for the check.
      */
     fun bonusModifier(value: Int) {
         bonusModifier = value
     }
-    
+
     /**
      * Set the threshold for critical success.
      */
     fun criticalSuccessThreshold(value: Int) {
         criticalSuccessThreshold = value
     }
-    
+
     /**
      * Set the threshold for critical failure.
      */
     fun criticalFailureThreshold(value: Int) {
         criticalFailureThreshold = value
     }
-    
+
     /**
      * Set the outcome for success.
      */
@@ -151,7 +151,7 @@ class SkillCheckBuilder {
             consequences = consequences
         )
     }
-    
+
     /**
      * Set the outcome for failure.
      */
@@ -162,7 +162,7 @@ class SkillCheckBuilder {
             consequences = consequences
         )
     }
-    
+
     /**
      * Set the outcome for critical success.
      */
@@ -173,7 +173,7 @@ class SkillCheckBuilder {
             consequences = consequences
         )
     }
-    
+
     /**
      * Set the outcome for critical failure.
      */
@@ -184,7 +184,7 @@ class SkillCheckBuilder {
             consequences = consequences
         )
     }
-    
+
     /**
      * Build the skill check.
      */
@@ -192,11 +192,11 @@ class SkillCheckBuilder {
         if (!::successOutcome.isInitialized) {
             throw IllegalStateException("Success outcome must be set")
         }
-        
+
         if (!::failureOutcome.isInitialized) {
             throw IllegalStateException("Failure outcome must be set")
         }
-        
+
         return SkillCheck(
             attributeName = attributeName,
             difficulty = difficulty,

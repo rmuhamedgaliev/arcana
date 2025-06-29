@@ -1,7 +1,7 @@
 package io.github.rmuhamedgaliev.arcana.domain.model.story
 
 import io.github.rmuhamedgaliev.arcana.domain.model.LocalizedText
-import java.util.UUID
+import java.util.*
 
 /**
  * Class representing an ending in the game.

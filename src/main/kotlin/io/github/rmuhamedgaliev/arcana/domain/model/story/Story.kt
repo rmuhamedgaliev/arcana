@@ -55,10 +55,10 @@ data class Story(
         return arcs.filter { arc ->
             // If the arc has no dependency, it's always available
             arc.dependency.isNullOrEmpty() ||
-            // If the dependency is an arc ID, check if it's unlocked
-            unlockedArcs.contains(arc.dependency) ||
-            // If the dependency is a condition, it will be evaluated elsewhere
-            arc.dependency.startsWith("condition:")
+                    // If the dependency is an arc ID, check if it's unlocked
+                    unlockedArcs.contains(arc.dependency) ||
+                    // If the dependency is a condition, it will be evaluated elsewhere
+                    arc.dependency.startsWith("condition:")
         }
     }
 

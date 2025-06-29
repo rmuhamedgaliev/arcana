@@ -2,7 +2,7 @@ package io.github.rmuhamedgaliev.arcana.application.events
 
 import io.github.rmuhamedgaliev.arcana.domain.model.payment.SubscriptionTier
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * Base class for all payment-related events.

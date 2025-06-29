@@ -1,9 +1,8 @@
 package io.github.rmuhamedgaliev.arcana.application.services
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.rmuhamedgaliev.arcana.application.events.AbstractEvent
-import io.github.rmuhamedgaliev.arcana.application.events.Event
 import io.github.rmuhamedgaliev.arcana.application.events.SimpleEventBus
-import io.github.rmuhamedgaliev.arcana.domain.model.Language
 import io.github.rmuhamedgaliev.arcana.domain.model.mechanics.Consequence
 import io.github.rmuhamedgaliev.arcana.domain.model.payment.SubscriptionTier
 import io.github.rmuhamedgaliev.arcana.domain.model.player.Player
@@ -13,10 +12,9 @@ import io.github.rmuhamedgaliev.arcana.domain.ports.PlayerRepository
 import io.github.rmuhamedgaliev.arcana.infrastructure.config.AppConfig
 import io.github.rmuhamedgaliev.arcana.infrastructure.database.H2DatabaseConfig
 import io.github.rmuhamedgaliev.arcana.infrastructure.database.H2PlayerRepository
+import io.github.rmuhamedgaliev.arcana.infrastructure.json.JsonStoryRepository
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import java.time.Instant
-import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
@@ -54,9 +52,29 @@ class GameApplicationService(
     // In-memory cache of loaded stories
     private val storyCache = ConcurrentHashMap<String, Story>()
 
+    private val objectMapper = jacksonObjectMapper()
+    private val storyRepository = JsonStoryRepository(config, objectMapper)
+
     init {
         // Initialize database
         dbConfig.initialize()
+        loadStories()
+    }
+
+    private fun loadStories() {
+        runBlocking {
+            try {
+                logger.info { "Loading stories from: ${config.gamesDirectory}" }
+                val stories = storyRepository.findAll()
+                stories.forEach { story ->
+                    storyCache[story.id] = story
+                    logger.info { "Loaded story: ${story.id}" }
+                }
+                logger.info { "Total stories loaded: ${stories.size}" }
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to load stories" }
+            }
+        }
     }
 
     /**
@@ -83,14 +101,15 @@ class GameApplicationService(
      * @return The starting beat of the story
      */
     suspend fun startStory(playerId: String, storyId: String): StoryBeat? {
-        val player = playerRepository.findById(playerId) ?: return null
-        val story = getStory(storyId) ?: return null
+        logger.info { "Starting story '$storyId' for player $playerId" }
 
-        // Check if player has access to this story
-        if (story.isPremium() && !hasPremiumAccess(player, story.requiredSubscriptionTier)) {
-            logger.info { "Player $playerId does not have access to premium story $storyId" }
+        val player = playerRepository.findById(playerId) ?: return null
+        val story = getStory(storyId) ?: run {
+            logger.error { "Story '$storyId' not found" }
             return null
         }
+
+        logger.info { "Story '$storyId' loaded successfully: ${story.title}" }
 
         val startBeat = story.getBeat(story.startBeatId) ?: return null
 
@@ -157,10 +176,12 @@ class GameApplicationService(
      * @return The story, or null if not found
      */
     private fun getStory(storyId: String): Story? {
+        logger.info { "Attempting to load story: $storyId" }
+
         // Check cache first
         return storyCache[storyId] ?: run {
+            logger.warn { "Story '$storyId' not found in cache. Available stories: ${storyCache.keys}" }
             // TODO: Implement StoryRepository to load from JSON files
-            // For now, return null
             null
         }
     }

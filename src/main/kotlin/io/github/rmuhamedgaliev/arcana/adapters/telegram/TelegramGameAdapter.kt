@@ -25,23 +25,23 @@ class TelegramGameAdapter(
     private val config: AppConfig,
     private val gameService: GameApplicationService = GameApplicationService(config)
 ) : TelegramLongPollingBot() {
-    
+
     // Map of chat ID to current story ID
     private val activeStories = ConcurrentHashMap<Long, String>()
-    
+
     // Map of chat ID to current beat ID
     private val activeBeats = ConcurrentHashMap<Long, StoryBeat>()
-    
+
     // Map of chat ID to language
     private val userLanguages = ConcurrentHashMap<Long, Language>()
-    
+
     // Coroutine scope for async operations
     private val scope = CoroutineScope(Dispatchers.IO)
-    
+
     override fun getBotToken(): String = config.telegramBotToken
-    
+
     override fun getBotUsername(): String = "ArcanaQuestBot"
-    
+
     override fun onUpdateReceived(update: Update) {
         try {
             // Handle callback queries (button clicks)
@@ -49,7 +49,7 @@ class TelegramGameAdapter(
                 handleCallbackQuery(update)
                 return
             }
-            
+
             // Handle text messages
             if (update.hasMessage() && update.message.hasText()) {
                 handleTextMessage(update)
@@ -59,7 +59,7 @@ class TelegramGameAdapter(
             logger.error(e) { "Error processing update" }
         }
     }
-    
+
     /**
      * Handle a callback query (button click).
      *
@@ -69,32 +69,37 @@ class TelegramGameAdapter(
         val callbackQuery = update.callbackQuery
         val chatId = callbackQuery.message.chatId
         val data = callbackQuery.data
-        
+
         when {
             data.startsWith("choice:") -> {
                 val choiceId = data.substring("choice:".length)
                 handleChoice(chatId, choiceId)
             }
+
             data.startsWith("language:") -> {
                 val languageCode = data.substring("language:".length)
                 handleLanguageChange(chatId, languageCode)
             }
+
             data.startsWith("story:") -> {
                 val storyId = data.substring("story:".length)
                 handleStoryStart(chatId, storyId)
             }
+
             data == "start" -> {
                 sendMainMenu(chatId)
             }
+
             data == "language" -> {
                 sendLanguageMenu(chatId)
             }
+
             data == "stories" -> {
                 sendStoryMenu(chatId)
             }
         }
     }
-    
+
     /**
      * Handle a text message.
      *
@@ -104,21 +109,25 @@ class TelegramGameAdapter(
         val message = update.message
         val chatId = message.chatId
         val text = message.text
-        
+
         when (text) {
             "/start" -> {
                 sendWelcomeMessage(chatId)
                 sendMainMenu(chatId)
             }
+
             "/language" -> {
                 sendLanguageMenu(chatId)
             }
+
             "/stories" -> {
                 sendStoryMenu(chatId)
             }
+
             "/help" -> {
                 sendHelpMessage(chatId)
             }
+
             else -> {
                 // If a story is active, treat as a choice
                 if (activeStories.containsKey(chatId) && activeBeats.containsKey(chatId)) {
@@ -139,7 +148,7 @@ class TelegramGameAdapter(
             }
         }
     }
-    
+
     /**
      * Handle a choice selection.
      *
@@ -148,12 +157,12 @@ class TelegramGameAdapter(
      */
     private fun handleChoice(chatId: Long, choiceId: String) {
         val storyId = activeStories[chatId] ?: return
-        
+
         scope.launch {
             try {
                 val playerId = chatId.toString()
                 val nextBeat = gameService.makeChoice(playerId, storyId, choiceId)
-                
+
                 if (nextBeat != null) {
                     activeBeats[chatId] = nextBeat
                     sendBeat(chatId, nextBeat)
@@ -166,7 +175,7 @@ class TelegramGameAdapter(
             }
         }
     }
-    
+
     /**
      * Handle a language change.
      *
@@ -179,7 +188,7 @@ class TelegramGameAdapter(
         sendMessage(chatId, "Language changed to ${language.displayName}")
         sendMainMenu(chatId)
     }
-    
+
     /**
      * Handle starting a story.
      *
@@ -189,28 +198,34 @@ class TelegramGameAdapter(
     private fun handleStoryStart(chatId: Long, storyId: String) {
         scope.launch {
             try {
+                logger.info { "Starting story '$storyId' for user $chatId" }
+
                 val playerId = chatId.toString()
-                
+
                 // Ensure player exists
-                gameService.getOrCreatePlayer(playerId, "Telegram User")
-                
+                val player = gameService.getOrCreatePlayer(playerId, "Telegram User")
+                logger.info { "Player created/found: ${player.id}" }
+
                 // Start the story
+                logger.info { "Attempting to load story: $storyId" }
                 val startBeat = gameService.startStory(playerId, storyId)
-                
+
                 if (startBeat != null) {
+                    logger.info { "Story '$storyId' loaded successfully, start beat: ${startBeat.id}" }
                     activeStories[chatId] = storyId
                     activeBeats[chatId] = startBeat
                     sendBeat(chatId, startBeat)
                 } else {
+                    logger.warn { "Failed to load story '$storyId' - startBeat is null" }
                     sendMessage(chatId, "Failed to start story. Please try again.")
                 }
             } catch (e: Exception) {
-                logger.error(e) { "Error starting story" }
+                logger.error(e) { "Error starting story '$storyId' for user $chatId" }
                 sendMessage(chatId, "An error occurred. Please try again.")
             }
         }
     }
-    
+
     /**
      * Send a welcome message.
      *
@@ -219,14 +234,15 @@ class TelegramGameAdapter(
     private fun sendWelcomeMessage(chatId: Long) {
         sendMessage(chatId, "Welcome to the Text Quest Engine! Choose a story to begin your adventure.")
     }
-    
+
     /**
      * Send a help message.
      *
      * @param chatId The chat ID
      */
     private fun sendHelpMessage(chatId: Long) {
-        sendMessage(chatId, """
+        sendMessage(
+            chatId, """
             *Text Quest Engine Help*
             
             Available commands:
@@ -236,9 +252,10 @@ class TelegramGameAdapter(
             /help - Show this help message
             
             During a story, you can select options by tapping the buttons or typing the number of the option.
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
-    
+
     /**
      * Send the main menu.
      *
@@ -248,29 +265,33 @@ class TelegramGameAdapter(
         val message = SendMessage.builder()
             .chatId(chatId.toString())
             .text("Main Menu")
-            .replyMarkup(InlineKeyboardMarkup.builder().keyboard(listOf(
-                listOf(
-                    InlineKeyboardButton.builder()
-                        .text("Browse Stories")
-                        .callbackData("stories")
-                        .build()
-                ),
-                listOf(
-                    InlineKeyboardButton.builder()
-                        .text("Change Language")
-                        .callbackData("language")
-                        .build()
-                )
-            )).build())
+            .replyMarkup(
+                InlineKeyboardMarkup.builder().keyboard(
+                    listOf(
+                        listOf(
+                            InlineKeyboardButton.builder()
+                                .text("Browse Stories")
+                                .callbackData("stories")
+                                .build()
+                        ),
+                        listOf(
+                            InlineKeyboardButton.builder()
+                                .text("Change Language")
+                                .callbackData("language")
+                                .build()
+                        )
+                    )
+                ).build()
+            )
             .build()
-        
+
         try {
             execute(message)
         } catch (e: Exception) {
             logger.error(e) { "Error sending main menu" }
         }
     }
-    
+
     /**
      * Send the language menu.
      *
@@ -283,22 +304,23 @@ class TelegramGameAdapter(
                 .callbackData("language:${language.code}")
                 .build()
         }
-        
+
         val message = SendMessage.builder()
             .chatId(chatId.toString())
             .text("Select a language:")
-            .replyMarkup(InlineKeyboardMarkup.builder().keyboard(
+            .replyMarkup(
+                InlineKeyboardMarkup.builder().keyboard(
                 buttons.map { listOf(it) }
             ).build())
             .build()
-        
+
         try {
             execute(message)
         } catch (e: Exception) {
             logger.error(e) { "Error sending language menu" }
         }
     }
-    
+
     /**
      * Send the story menu.
      *
@@ -309,23 +331,27 @@ class TelegramGameAdapter(
         val message = SendMessage.builder()
             .chatId(chatId.toString())
             .text("Select a story:")
-            .replyMarkup(InlineKeyboardMarkup.builder().keyboard(listOf(
-                listOf(
-                    InlineKeyboardButton.builder()
-                        .text("Adventure (demo)")
-                        .callbackData("story:adventure")
-                        .build()
-                )
-            )).build())
+            .replyMarkup(
+                InlineKeyboardMarkup.builder().keyboard(
+                    listOf(
+                        listOf(
+                            InlineKeyboardButton.builder()
+                                .text("Adventure (demo)")
+                                .callbackData("story:adventure")
+                                .build()
+                        )
+                    )
+                ).build()
+            )
             .build()
-        
+
         try {
             execute(message)
         } catch (e: Exception) {
             logger.error(e) { "Error sending story menu" }
         }
     }
-    
+
     /**
      * Send a beat to the user.
      *
@@ -335,26 +361,30 @@ class TelegramGameAdapter(
     private fun sendBeat(chatId: Long, beat: StoryBeat) {
         val language = userLanguages.getOrDefault(chatId, Language.EN)
         val text = beat.text.getTextWithFallback(language) ?: "No text available"
-        
+
         if (beat.isEndBeat || beat.choices.isEmpty()) {
             // End of story
             val message = SendMessage.builder()
                 .chatId(chatId.toString())
                 .text("$text\n\n*The End*")
                 .parseMode("Markdown")
-                .replyMarkup(InlineKeyboardMarkup.builder().keyboard(listOf(
-                    listOf(
-                        InlineKeyboardButton.builder()
-                            .text("Back to Main Menu")
-                            .callbackData("start")
-                            .build()
-                    )
-                )).build())
+                .replyMarkup(
+                    InlineKeyboardMarkup.builder().keyboard(
+                        listOf(
+                            listOf(
+                                InlineKeyboardButton.builder()
+                                    .text("Back to Main Menu")
+                                    .callbackData("start")
+                                    .build()
+                            )
+                        )
+                    ).build()
+                )
                 .build()
-            
+
             try {
                 execute(message)
-                
+
                 // Clear active story and beat
                 activeStories.remove(chatId)
                 activeBeats.remove(chatId)
@@ -370,15 +400,16 @@ class TelegramGameAdapter(
                     .callbackData("choice:${choice.id}")
                     .build()
             }
-            
+
             val message = SendMessage.builder()
                 .chatId(chatId.toString())
                 .text(text)
-                .replyMarkup(InlineKeyboardMarkup.builder().keyboard(
+                .replyMarkup(
+                    InlineKeyboardMarkup.builder().keyboard(
                     buttons.map { listOf(it) }
                 ).build())
                 .build()
-            
+
             try {
                 execute(message)
             } catch (e: Exception) {
@@ -386,7 +417,7 @@ class TelegramGameAdapter(
             }
         }
     }
-    
+
     /**
      * Send a simple text message.
      *
@@ -399,7 +430,7 @@ class TelegramGameAdapter(
             .text(text)
             .parseMode("Markdown")
             .build()
-        
+
         try {
             execute(message)
         } catch (e: Exception) {

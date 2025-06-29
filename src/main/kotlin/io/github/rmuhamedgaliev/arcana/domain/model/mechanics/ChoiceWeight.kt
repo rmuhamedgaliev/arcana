@@ -9,22 +9,22 @@ enum class ChoiceWeight(val displayFactor: Double) {
      * Barely visible choice, displayed with low prominence.
      */
     BARELY_VISIBLE(0.5),
-    
+
     /**
      * Normal choice, displayed with standard prominence.
      */
     NORMAL(1.0),
-    
+
     /**
      * Prominent choice, displayed with high prominence.
      */
     PROMINENT(1.5),
-    
+
     /**
      * Very prominent choice, displayed with very high prominence.
      */
     VERY_PROMINENT(2.0);
-    
+
     companion object {
         /**
          * Get a choice weight by its name.

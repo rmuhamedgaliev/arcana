@@ -21,7 +21,7 @@ enum class SubscriptionTier(
         customThemes = false,
         exclusiveContent = false
     ),
-    
+
     BASIC(
         displayName = "Basic",
         priceUsd = 2.99,
@@ -31,7 +31,7 @@ enum class SubscriptionTier(
         customThemes = false,
         exclusiveContent = false
     ),
-    
+
     PREMIUM(
         displayName = "Premium",
         priceUsd = 9.99,
@@ -41,7 +41,7 @@ enum class SubscriptionTier(
         customThemes = true,
         exclusiveContent = true
     );
-    
+
     /**
      * Check if this tier has access to a feature that requires a minimum tier.
      *
@@ -51,7 +51,7 @@ enum class SubscriptionTier(
     fun hasAccess(minimumTier: SubscriptionTier): Boolean {
         return this.ordinal >= minimumTier.ordinal
     }
-    
+
     companion object {
         /**
          * Get a subscription tier by its display name.

@@ -30,3 +30,7 @@ hs_err_pid*
 replay_pid*
 *.db
 *.sqlite
+
+.env
+.envrc
+deploy/inventory.ini

@@ -70,32 +70,32 @@ enum class ConsequenceType {
      * Modify a player attribute.
      */
     ATTRIBUTE,
-    
+
     /**
      * Trigger an event.
      */
     EVENT,
-    
+
     /**
      * Modify a relationship with an NPC.
      */
     RELATIONSHIP,
-    
+
     /**
      * Modify a faction standing.
      */
     FACTION,
-    
+
     /**
      * Modify a world state.
      */
     WORLD_STATE,
-    
+
     /**
      * Chain reaction that triggers other consequences.
      */
     CHAIN_REACTION,
-    
+
     /**
      * Cumulative effect that builds up over time.
      */

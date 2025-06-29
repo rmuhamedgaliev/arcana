@@ -1,0 +1,63 @@
+---
+- name: Deploy Arcana Bot
+  hosts: "{{ lookup('env', 'PI_HOST') }}"
+  remote_user: "{{ lookup('env', 'PI_USER') | default('pi') }}"
+  gather_facts: no
+
+  vars:
+    registry: "{{ lookup('env', 'REGISTRY') }}"
+    app_name: "{{ lookup('env', 'APP_NAME') | default('arcana-bot') }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest') }}"
+    bot_token: "{{ lookup('env', 'BOT_TOKEN') }}"
+    bot_username: "{{ lookup('env', 'BOT_USERNAME') | default('') }}"
+
+    full_image: "{{ registry }}/{{ app_name }}:{{ image_tag }}"
+    container_name: "{{ app_name }}"
+    app_dir: "/home/{{ ansible_user }}/arcana"
+
+  tasks:
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}/games"
+        state: directory
+        mode: '0755'
+
+    - name: Stop old container
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove old container
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Pull new image
+      containers.podman.podman_image:
+        name: "{{ full_image }}"
+        pull: yes
+        force: yes
+
+    - name: Start new container
+      containers.podman.podman_container:
+        name: "{{ container_name }}"
+        image: "{{ full_image }}"
+        state: started
+        restart_policy: unless-stopped
+        env:
+          TELEGRAM_BOT_TOKEN: "{{ bot_token }}"
+          BOT_USERNAME: "{{ bot_username }}"
+        volumes:
+          - "{{ app_dir }}/games:/app/games:Z"
+        detach: yes
+
+    - name: Wait for container
+      pause:
+        seconds: 3
+
+    - name: Check status
+      containers.podman.podman_container_info:
+        name: "{{ container_name }}"
+      register: container_info

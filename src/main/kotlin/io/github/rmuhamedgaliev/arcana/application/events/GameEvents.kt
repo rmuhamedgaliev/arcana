@@ -1,9 +1,5 @@
 package io.github.rmuhamedgaliev.arcana.application.events
 
-import io.github.rmuhamedgaliev.arcana.domain.model.story.NarrativeChoice
-import io.github.rmuhamedgaliev.arcana.domain.model.story.Story
-import io.github.rmuhamedgaliev.arcana.domain.model.story.StoryBeat
-
 /**
  * Base class for all game-related events.
  */

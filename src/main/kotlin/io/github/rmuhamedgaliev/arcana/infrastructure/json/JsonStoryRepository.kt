@@ -1,6 +1,12 @@
 package io.github.rmuhamedgaliev.arcana.infrastructure.json
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.rmuhamedgaliev.arcana.domain.model.Language
 import io.github.rmuhamedgaliev.arcana.domain.model.LocalizedText
@@ -15,7 +21,8 @@ import io.github.rmuhamedgaliev.arcana.domain.ports.StoryRepository
 import io.github.rmuhamedgaliev.arcana.infrastructure.config.AppConfig
 import mu.KotlinLogging
 import java.io.File
-import java.util.UUID
+import java.io.IOException
+import java.util.*
 
 private val logger = KotlinLogging.logger {}
 
@@ -26,6 +33,11 @@ class JsonStoryRepository(
     private val config: AppConfig,
     private val objectMapper: ObjectMapper
 ) : StoryRepository {
+
+    init {
+        // Configure ObjectMapper to ignore unknown properties
+        objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    }
 
     /**
      * Find a story by ID.
@@ -67,7 +79,134 @@ class JsonStoryRepository(
         gamesDir.listFiles { file -> file.isFile && file.name.endsWith(".json") }?.forEach { file ->
             try {
                 val jsonData = file.readText()
-                val gameData = objectMapper.readValue<GameData>(jsonData)
+
+                // Parse JSON to JsonNode first to handle different formats
+                val rootNode = objectMapper.readTree(jsonData)
+
+                // Check if quests is an array and convert it to a map if needed
+                val questsNode = rootNode.get("quests")
+                if (questsNode != null && questsNode.isArray) {
+                    // Create a new object node for the quests map
+                    val questsMapNode = objectMapper.createObjectNode()
+
+                    // Convert array to map using id as key
+                    for (questNode in questsNode) {
+                        val questId = questNode.get("id").asText()
+
+                        // Create a new scene data node
+                        val sceneNode = objectMapper.createObjectNode()
+
+                        // Add isEndScene field
+                        if (questNode.has("isEnd")) {
+                            sceneNode.put("isEndScene", questNode.get("isEnd").asBoolean())
+                        } else {
+                            sceneNode.put("isEndScene", false)
+                        }
+
+                        // Add attributes field
+                        if (questNode.has("attributes")) {
+                            sceneNode.set<JsonNode>("attributes", questNode.get("attributes"))
+                        }
+
+                        // Convert actions to options
+                        if (questNode.has("actions")) {
+                            val actionsNode = questNode.get("actions")
+                            val optionsArray = objectMapper.createArrayNode()
+
+                            for (actionNode in actionsNode) {
+                                val optionNode = objectMapper.createObjectNode()
+                                optionNode.put("nextSceneId", actionNode.get("nextScene").asText())
+                                optionsArray.add(optionNode)
+                            }
+
+                            sceneNode.set<JsonNode>("options", optionsArray)
+                        }
+
+                        // Add the scene to the quests map
+                        questsMapNode.set<JsonNode>(questId, sceneNode)
+                    }
+
+                    // Replace the quests array with the quests map
+                    ((rootNode as com.fasterxml.jackson.databind.node.ObjectNode)).set<JsonNode>("quests", questsMapNode)
+                }
+
+                // Handle localizations array if present
+                if (rootNode.has("localizations") && !rootNode.has("localizedData")) {
+                    val localizationsNode = rootNode.get("localizations")
+                    val localizedDataNode = objectMapper.createObjectNode()
+
+                    for (localizationNode in localizationsNode) {
+                        val language = localizationNode.get("language").asText()
+                        val localizedGameDataNode = objectMapper.createObjectNode()
+
+                        // Add title and description
+                        localizedGameDataNode.put("title", localizationNode.get("title").asText())
+                        localizedGameDataNode.put("description", localizationNode.get("description").asText())
+
+                        // Create scenes map from questTexts and actionTexts
+                        val scenesNode = objectMapper.createObjectNode()
+
+                        if (localizationNode.has("questTexts")) {
+                            val questTextsNode = localizationNode.get("questTexts")
+                            val questTextsFields = questTextsNode.fields()
+
+                            while (questTextsFields.hasNext()) {
+                                val (sceneId, textNode) = questTextsFields.next()
+                                val localizedSceneNode = objectMapper.createObjectNode()
+
+                                // Add text
+                                localizedSceneNode.put("text", textNode.asText())
+
+                                // Add options if available
+                                if (localizationNode.has("actionTexts") && 
+                                    localizationNode.get("actionTexts").has(sceneId)) {
+                                    val actionTextsNode = localizationNode.get("actionTexts").get(sceneId)
+                                    val optionsArray = objectMapper.createArrayNode()
+
+                                    val actionTextsFields = actionTextsNode.fields()
+                                    while (actionTextsFields.hasNext()) {
+                                        val (index, textValueNode) = actionTextsFields.next()
+
+                                        // Find the corresponding nextSceneId from the quests array
+                                        var nextSceneId = ""
+                                        if (questsNode != null && questsNode.isArray) {
+                                            for (questNode in questsNode) {
+                                                if (questNode.get("id").asText() == sceneId) {
+                                                    val actionsNode = questNode.get("actions")
+                                                    val indexInt = index.toIntOrNull()
+                                                    if (indexInt != null && 
+                                                        actionsNode != null && 
+                                                        indexInt < actionsNode.size()) {
+                                                        nextSceneId = actionsNode.get(indexInt).get("nextScene").asText()
+                                                        break
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        val optionNode = objectMapper.createObjectNode()
+                                        optionNode.put("text", textValueNode.asText())
+                                        optionNode.put("nextSceneId", nextSceneId)
+                                        optionsArray.add(optionNode)
+                                    }
+
+                                    localizedSceneNode.set<JsonNode>("options", optionsArray)
+                                }
+
+                                scenesNode.set<JsonNode>(sceneId, localizedSceneNode)
+                            }
+                        }
+
+                        localizedGameDataNode.set<JsonNode>("scenes", scenesNode)
+                        localizedDataNode.set<JsonNode>(language, localizedGameDataNode)
+                    }
+
+                    // Add localizedData to the root node
+                    ((rootNode as com.fasterxml.jackson.databind.node.ObjectNode)).set<JsonNode>("localizedData", localizedDataNode)
+                }
+
+                // Convert the modified JsonNode back to GameData
+                val gameData = objectMapper.treeToValue(rootNode, GameData::class.java)
                 val story = convertToStory(gameData)
                 if (story != null) {
                     stories.add(story)
@@ -166,7 +305,7 @@ class JsonStoryRepository(
                 id = gameData.id,
                 title = title,
                 description = description,
-                startBeatId = gameData.startSceneId,
+                startBeatId = gameData.startQuestId,
                 requiredSubscriptionTier = SubscriptionTier.FREE // Default to free
             )
 
@@ -181,7 +320,7 @@ class JsonStoryRepository(
             }
 
             // Convert scenes to beats
-            gameData.scenes.forEach { (sceneId, sceneData) ->
+            gameData.quests.forEach { (sceneId, sceneData) ->
                 val beatText = LocalizedText()
 
                 // Add localized text for each language
@@ -224,8 +363,8 @@ class JsonStoryRepository(
                         val language = Language.fromCode(languageCode) ?: return@forEach
                         val localizedScene = localizedGameData.scenes[sceneId]
                         if (localizedScene != null) {
-                            val localizedOption = localizedScene.options?.find { 
-                                it.nextSceneId == optionData.nextSceneId 
+                            val localizedOption = localizedScene.options?.find {
+                                it.nextSceneId == optionData.nextSceneId
                             }
                             if (localizedOption != null) {
                                 choiceText.setText(language, localizedOption.text)
@@ -282,8 +421,8 @@ class JsonStoryRepository(
      */
     data class GameData(
         val id: String,
-        val startSceneId: String,
-        val scenes: Map<String, SceneData>,
+        val startQuestId: String,
+        val quests: Map<String, SceneData>,
         val localizedData: Map<String, LocalizedGameData>,
         val tags: List<String>? = null,
         val metadata: Map<String, String>? = null

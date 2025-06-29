@@ -13,7 +13,7 @@ interface PlayerRepository {
      * @return The player, or null if not found
      */
     suspend fun findById(id: String): Player?
-    
+
     /**
      * Save a player.
      *
@@ -21,21 +21,21 @@ interface PlayerRepository {
      * @return The saved player
      */
     suspend fun save(player: Player): Player
-    
+
     /**
      * Delete a player.
      *
      * @param id The ID of the player to delete
      */
     suspend fun delete(id: String)
-    
+
     /**
      * Reset a player's progress.
      *
      * @param id The ID of the player to reset
      */
     suspend fun resetProgress(id: String)
-    
+
     /**
      * Find players by subscription tier.
      *
@@ -43,14 +43,14 @@ interface PlayerRepository {
      * @return A list of players with the specified subscription tier
      */
     suspend fun findBySubscriptionTier(subscriptionTier: String): List<Player>
-    
+
     /**
      * Find players with active subscriptions.
      *
      * @return A list of players with active subscriptions
      */
     suspend fun findWithActiveSubscriptions(): List<Player>
-    
+
     /**
      * Find players with expired subscriptions.
      *

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
  */
 class LocalizedText {
     private val texts: MutableMap<Language, String> = mutableMapOf()
-    
+
     /**
      * Set text for a language.
      *
@@ -18,7 +18,7 @@ class LocalizedText {
     fun setText(language: Language, text: String) {
         texts[language] = text
     }
-    
+
     /**
      * Get text for a language.
      *
@@ -28,7 +28,7 @@ class LocalizedText {
     fun getText(language: Language): String? {
         return texts[language]
     }
-    
+
     /**
      * Get text for a language with variable substitution.
      *
@@ -38,13 +38,13 @@ class LocalizedText {
      */
     fun getText(language: Language, variables: Map<String, Any>): String? {
         val text = texts[language] ?: return null
-        
+
         return text.replace(Regex("\\{([^}]+)\\}")) { matchResult ->
             val variableName = matchResult.groupValues[1]
             variables[variableName]?.toString() ?: "{$variableName}"
         }
     }
-    
+
     /**
      * Check if text is set for a language.
      *
@@ -54,7 +54,7 @@ class LocalizedText {
     fun hasText(language: Language): Boolean {
         return texts.containsKey(language)
     }
-    
+
     /**
      * Get all texts.
      *
@@ -64,7 +64,7 @@ class LocalizedText {
     fun getAllTexts(): Map<Language, String> {
         return texts.toMap()
     }
-    
+
     /**
      * Get text for a language, or a fallback language if not set.
      *
@@ -75,7 +75,7 @@ class LocalizedText {
     fun getTextWithFallback(language: Language, fallbackLanguage: Language = Language.EN): String? {
         return texts[language] ?: texts[fallbackLanguage]
     }
-    
+
     /**
      * Get text for a language with variable substitution, or a fallback language if not set.
      *
@@ -84,9 +84,13 @@ class LocalizedText {
      * @param fallbackLanguage The fallback language
      * @return The text with variables substituted, or null if not set in either language
      */
-    fun getTextWithFallback(language: Language, variables: Map<String, Any>, fallbackLanguage: Language = Language.EN): String? {
+    fun getTextWithFallback(
+        language: Language,
+        variables: Map<String, Any>,
+        fallbackLanguage: Language = Language.EN
+    ): String? {
         val text = texts[language] ?: texts[fallbackLanguage] ?: return null
-        
+
         return text.replace(Regex("\\{([^}]+)\\}")) { matchResult ->
             val variableName = matchResult.groupValues[1]
             variables[variableName]?.toString() ?: "{$variableName}"

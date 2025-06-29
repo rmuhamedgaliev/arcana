@@ -13,7 +13,7 @@ interface PlayerJourneyRepository {
      * @return The journey, or null if not found
      */
     suspend fun findById(id: String): PlayerJourney?
-    
+
     /**
      * Find player journeys by player ID.
      *
@@ -21,7 +21,7 @@ interface PlayerJourneyRepository {
      * @return A list of journeys for the specified player
      */
     suspend fun findByPlayerId(playerId: String): List<PlayerJourney>
-    
+
     /**
      * Find player journeys by story ID.
      *
@@ -29,7 +29,7 @@ interface PlayerJourneyRepository {
      * @return A list of journeys for the specified story
      */
     suspend fun findByStoryId(storyId: String): List<PlayerJourney>
-    
+
     /**
      * Find the active journey for a player.
      *
@@ -37,7 +37,7 @@ interface PlayerJourneyRepository {
      * @return The active journey, or null if not found
      */
     suspend fun findActiveJourney(playerId: String): PlayerJourney?
-    
+
     /**
      * Find completed journeys for a player.
      *
@@ -45,7 +45,7 @@ interface PlayerJourneyRepository {
      * @return A list of completed journeys for the specified player
      */
     suspend fun findCompletedJourneys(playerId: String): List<PlayerJourney>
-    
+
     /**
      * Save a player journey.
      *
@@ -53,14 +53,14 @@ interface PlayerJourneyRepository {
      * @return The saved journey
      */
     suspend fun save(journey: PlayerJourney): PlayerJourney
-    
+
     /**
      * Delete a player journey.
      *
      * @param id The ID of the journey to delete
      */
     suspend fun delete(id: String)
-    
+
     /**
      * Find journeys that visited a specific beat.
      *
@@ -68,7 +68,7 @@ interface PlayerJourneyRepository {
      * @return A list of journeys that visited the specified beat
      */
     suspend fun findByVisitedBeat(beatId: String): List<PlayerJourney>
-    
+
     /**
      * Find journeys that made a specific choice.
      *

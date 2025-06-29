@@ -4,7 +4,7 @@ import io.github.rmuhamedgaliev.arcana.domain.model.mechanics.Consequence
 import io.github.rmuhamedgaliev.arcana.domain.model.mechanics.ConsequenceType
 import io.github.rmuhamedgaliev.arcana.domain.model.player.Player
 import io.github.rmuhamedgaliev.arcana.domain.model.story.Story
-import java.util.UUID
+import java.util.*
 
 /**
  * DSL for creating effects and consequences.
@@ -12,7 +12,7 @@ import java.util.UUID
  */
 class EffectDSL {
     private val consequences = mutableListOf<Consequence>()
-    
+
     /**
      * Add an attribute effect.
      */
@@ -27,7 +27,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Add a relationship effect.
      */
@@ -42,7 +42,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Add a faction standing effect.
      */
@@ -57,7 +57,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Add an item to the inventory.
      */
@@ -72,7 +72,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Remove an item from the inventory.
      */
@@ -87,7 +87,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Trigger an event.
      */
@@ -102,7 +102,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Set a world state value.
      */
@@ -117,14 +117,14 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Add a delayed consequence.
      */
     fun delayed(turns: Int, init: EffectDSL.() -> Unit) {
         val effectDSL = EffectDSL()
         effectDSL.init()
-        
+
         effectDSL.consequences.forEach { consequence ->
             consequences.add(
                 Consequence(
@@ -138,14 +138,14 @@ class EffectDSL {
             )
         }
     }
-    
+
     /**
      * Add a conditional effect.
      */
     fun conditional(condition: String, init: EffectDSL.() -> Unit) {
         val effectDSL = EffectDSL()
         effectDSL.init()
-        
+
         effectDSL.consequences.forEach { consequence ->
             consequences.add(
                 Consequence(
@@ -159,16 +159,16 @@ class EffectDSL {
             )
         }
     }
-    
+
     /**
      * Add a chain reaction.
      */
     fun chainReaction(init: EffectDSL.() -> Unit) {
         val effectDSL = EffectDSL()
         effectDSL.init()
-        
+
         val chainId = UUID.randomUUID().toString()
-        
+
         // Add the chain reaction trigger
         consequences.add(
             Consequence(
@@ -179,7 +179,7 @@ class EffectDSL {
                 delay = 0
             )
         )
-        
+
         // Add all the consequences in the chain
         effectDSL.consequences.forEach { consequence ->
             consequences.add(
@@ -194,7 +194,7 @@ class EffectDSL {
             )
         }
     }
-    
+
     /**
      * Add a cumulative effect.
      */
@@ -209,7 +209,7 @@ class EffectDSL {
             )
         )
     }
-    
+
     /**
      * Get all consequences.
      */
@@ -238,12 +238,12 @@ fun applyConsequence(consequence: Consequence, player: Player, story: Story) {
             return
         }
     }
-    
+
     when (consequence.type) {
         ConsequenceType.ATTRIBUTE -> {
             val target = consequence.target
             val value = consequence.value
-            
+
             if (value.startsWith("+")) {
                 // Increment attribute
                 val increment = value.substring(1).toIntOrNull() ?: 0
@@ -260,57 +260,57 @@ fun applyConsequence(consequence: Consequence, player: Player, story: Story) {
                 player.setAttribute(target, newValue)
             }
         }
-        
+
         ConsequenceType.RELATIONSHIP -> {
             val npcId = consequence.target
             val value = consequence.value.toIntOrNull() ?: 0
             val currentValue = player.getAttribute("relationship:$npcId")
             player.setAttribute("relationship:$npcId", currentValue + value)
         }
-        
+
         ConsequenceType.FACTION -> {
             val factionId = consequence.target
             val value = consequence.value.toIntOrNull() ?: 0
             val currentValue = player.getAttribute("faction:$factionId")
             player.setAttribute("faction:$factionId", currentValue + value)
         }
-        
+
         ConsequenceType.WORLD_STATE -> {
             val key = consequence.target
             val value = consequence.value
             story.addMetadata("world_state:$key", value)
         }
-        
+
         ConsequenceType.EVENT -> {
             val eventId = consequence.target
             // In a real implementation, this would trigger an event in the event system
             // For now, we'll just record that the event was triggered
             player.setProgress("event:$eventId", "triggered")
         }
-        
+
         ConsequenceType.CHAIN_REACTION -> {
             val chainId = consequence.target
             // In a real implementation, this would trigger a chain reaction in the event system
             // For now, we'll just record that the chain reaction was triggered
             player.setProgress("chain:$chainId", "triggered")
         }
-        
+
         ConsequenceType.CUMULATIVE -> {
             val target = consequence.target
             val parts = consequence.value.split(":")
             val value = parts[0].toIntOrNull() ?: 0
             val maxValue = parts.getOrNull(1)?.toIntOrNull()
-            
+
             val currentValue = player.getAttribute(target)
             val newValue = currentValue + value
-            
+
             // Apply max value if specified
             val finalValue = if (maxValue != null && newValue > maxValue) {
                 maxValue
             } else {
                 newValue
             }
-            
+
             player.setAttribute(target, finalValue)
         }
     }

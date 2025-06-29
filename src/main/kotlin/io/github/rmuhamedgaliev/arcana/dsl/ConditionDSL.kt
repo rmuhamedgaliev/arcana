@@ -9,7 +9,7 @@ import io.github.rmuhamedgaliev.arcana.domain.model.story.Story
  */
 class ConditionDSL {
     private var condition: (Player, Story) -> Boolean = { _, _ -> true }
-    
+
     /**
      * Check if a player has an attribute.
      */
@@ -20,7 +20,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player attribute is equal to a value.
      */
@@ -31,7 +31,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player attribute is greater than a value.
      */
@@ -42,7 +42,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player attribute is less than a value.
      */
@@ -53,7 +53,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player attribute is in a range.
      */
@@ -64,7 +64,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has visited a beat.
      */
@@ -75,7 +75,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has made a choice.
      */
@@ -86,7 +86,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has a relationship with an NPC.
      */
@@ -97,7 +97,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player's relationship with an NPC is at least a certain value.
      */
@@ -108,7 +108,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player's relationship with an NPC is at most a certain value.
      */
@@ -119,7 +119,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player belongs to a faction.
      */
@@ -130,7 +130,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has a faction standing of at least a certain value.
      */
@@ -141,7 +141,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has an item.
      */
@@ -152,32 +152,32 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Check if a player has a certain amount of an item.
      */
     fun hasItemQuantity(itemId: String, quantity: Int): ConditionDSL {
         val previousCondition = condition
         condition = { player, story ->
-            previousCondition(player, story) && 
-            player.hasProgress("inventory:$itemId") && 
-            player.getProgress("inventory:$itemId")?.toIntOrNull() ?: 0 >= quantity
+            previousCondition(player, story) &&
+                    player.hasProgress("inventory:$itemId") &&
+                    player.getProgress("inventory:$itemId")?.toIntOrNull() ?: 0 >= quantity
         }
         return this
     }
-    
+
     /**
      * Check if a world state attribute is equal to a value.
      */
     fun worldStateEquals(key: String, value: String): ConditionDSL {
         val previousCondition = condition
         condition = { player, story ->
-            previousCondition(player, story) && 
-            story.getMetadata("world_state:$key") == value
+            previousCondition(player, story) &&
+                    story.getMetadata("world_state:$key") == value
         }
         return this
     }
-    
+
     /**
      * Negate the condition.
      */
@@ -188,7 +188,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Combine with another condition using AND.
      */
@@ -200,7 +200,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Combine with another condition using OR.
      */
@@ -212,7 +212,7 @@ class ConditionDSL {
         }
         return this
     }
-    
+
     /**
      * Build the condition.
      */
@@ -241,11 +241,11 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
         conditionString.startsWith("attribute:") -> {
             val parts = conditionString.removePrefix("attribute:").split(":")
             if (parts.size < 2) return false
-            
+
             val attributeName = parts[0]
             val operator = parts[1]
             val value = parts.getOrNull(2)?.toIntOrNull() ?: return false
-            
+
             when (operator) {
                 "eq" -> player.getAttribute(attributeName) == value
                 "gt" -> player.getAttribute(attributeName) > value
@@ -255,16 +255,16 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
                 else -> false
             }
         }
-        
+
         // Check for relationship conditions
         conditionString.startsWith("relationship:") -> {
             val parts = conditionString.removePrefix("relationship:").split(":")
             if (parts.size < 2) return false
-            
+
             val npcId = parts[0]
             val operator = parts[1]
             val value = parts.getOrNull(2)?.toIntOrNull() ?: return false
-            
+
             when (operator) {
                 "eq" -> player.getAttribute("relationship:$npcId") == value
                 "gt" -> player.getAttribute("relationship:$npcId") > value
@@ -274,16 +274,16 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
                 else -> false
             }
         }
-        
+
         // Check for faction conditions
         conditionString.startsWith("faction:") -> {
             val parts = conditionString.removePrefix("faction:").split(":")
             if (parts.size < 2) return false
-            
+
             val factionId = parts[0]
             val operator = parts[1]
             val value = parts.getOrNull(2)?.toIntOrNull() ?: return false
-            
+
             when (operator) {
                 "eq" -> player.getAttribute("faction:$factionId") == value
                 "gt" -> player.getAttribute("faction:$factionId") > value
@@ -294,14 +294,14 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
                 else -> false
             }
         }
-        
+
         // Check for item conditions
         conditionString.startsWith("item:") -> {
             val parts = conditionString.removePrefix("item:").split(":")
             if (parts.isEmpty()) return false
-            
+
             val itemId = parts[0]
-            
+
             if (parts.size == 1) {
                 // Simple item check
                 player.hasProgress("inventory:$itemId")
@@ -310,7 +310,7 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
                 val operator = parts[1]
                 val value = parts.getOrNull(2)?.toIntOrNull() ?: return false
                 val quantity = player.getProgress("inventory:$itemId")?.toIntOrNull() ?: 0
-                
+
                 when (operator) {
                     "eq" -> quantity == value
                     "gt" -> quantity > value
@@ -321,30 +321,30 @@ fun evaluateCondition(conditionString: String, player: Player, story: Story): Bo
                 }
             }
         }
-        
+
         // Check for world state conditions
         conditionString.startsWith("world:") -> {
             val parts = conditionString.removePrefix("world:").split(":")
             if (parts.size < 2) return false
-            
+
             val key = parts[0]
             val value = parts[1]
-            
+
             story.getMetadata("world_state:$key") == value
         }
-        
+
         // Check for visited beat conditions
         conditionString.startsWith("visited:") -> {
             val beatId = conditionString.removePrefix("visited:")
             player.hasProgress("visited:${story.id}:$beatId")
         }
-        
+
         // Check for made choice conditions
         conditionString.startsWith("choice:") -> {
             val choiceId = conditionString.removePrefix("choice:")
             player.hasProgress("choice:${story.id}:$choiceId")
         }
-        
+
         // Default to false for unknown conditions
         else -> false
     }

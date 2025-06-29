@@ -18,7 +18,7 @@ private val logger = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     // Get configuration from environment variables with default values
     val config = AppConfig.fromEnvironment()
-    
+
     // If bot token is provided, launch Telegram bot interface
     if (config.telegramBotToken.isNotBlank()) {
         launchTelegramBot(config)
@@ -30,7 +30,7 @@ fun main(args: Array<String>) {
 
 /**
  * Launch the Telegram bot interface.
- * 
+ *
  * @param config The application configuration
  */
 private fun launchTelegramBot(config: AppConfig) {
@@ -48,7 +48,7 @@ private fun launchTelegramBot(config: AppConfig) {
 
 /**
  * Launch the console interface.
- * 
+ *
  * @param config The application configuration
  */
 private fun launchConsoleInterface(config: AppConfig) {

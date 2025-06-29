@@ -10,7 +10,7 @@ import io.github.rmuhamedgaliev.arcana.domain.model.story.NarrativeChoice
 import io.github.rmuhamedgaliev.arcana.domain.model.story.Story
 import io.github.rmuhamedgaliev.arcana.domain.model.story.StoryArc
 import io.github.rmuhamedgaliev.arcana.domain.model.story.StoryBeat
-import java.util.UUID
+import java.util.*
 
 /**
  * DSL for creating stories.

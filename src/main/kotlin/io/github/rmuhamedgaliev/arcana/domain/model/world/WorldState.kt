@@ -1,6 +1,6 @@
 package io.github.rmuhamedgaliev.arcana.domain.model.world
 
-import java.util.UUID
+import java.util.*
 
 /**
  * Class representing the state of the game world.
@@ -23,7 +23,7 @@ data class WorldState(
     fun addMetadata(key: String, value: String) {
         metadata[key] = value
     }
-    
+
     /**
      * Get metadata from the world state.
      *
@@ -33,7 +33,7 @@ data class WorldState(
     fun getMetadata(key: String): String? {
         return metadata[key]
     }
-    
+
     /**
      * Check if the world state has a metadata key.
      *
@@ -43,7 +43,7 @@ data class WorldState(
     fun hasMetadata(key: String): Boolean {
         return metadata.containsKey(key)
     }
-    
+
     /**
      * Get a serialized representation of the world state.
      * This can be used to store the world state in a database.
@@ -52,19 +52,19 @@ data class WorldState(
      */
     fun serialize(): Map<String, String> {
         val result = mutableMapOf<String, String>()
-        
+
         // Add political state
         result["political.kingdomStability"] = political.kingdomStability.toString()
         result["political.warThreat"] = political.warThreat.toString()
         result["political.economicCondition"] = political.economicCondition.toString()
-        
+
         // Add environmental state
         result["environmental.seasonalEvents"] = environmental.seasonalEvents.toString()
         result["environmental.weatherEffects"] = environmental.weatherEffects.toString()
         environmental.resourceAvailability.forEach { (resource, amount) ->
             result["environmental.resource.$resource"] = amount.toString()
         }
-        
+
         // Add social state
         result["social.publicOpinion"] = social.publicOpinion.toString()
         social.rumorMill.forEachIndexed { index, rumor ->
@@ -73,15 +73,15 @@ data class WorldState(
         social.currentEvents.forEachIndexed { index, event ->
             result["social.event.$index"] = event.serialize()
         }
-        
+
         // Add metadata
         metadata.forEach { (key, value) ->
             result["metadata.$key"] = value
         }
-        
+
         return result
     }
-    
+
     companion object {
         /**
          * Deserialize a world state from a map of key-value pairs.
@@ -97,22 +97,22 @@ data class WorldState(
                 warThreat = data["political.warThreat"]?.toIntOrNull() ?: 20,
                 economicCondition = data["political.economicCondition"]?.toIntOrNull() ?: 80
             )
-            
+
             val environmental = EnvironmentalState(
                 seasonalEvents = data["environmental.seasonalEvents"]?.toBoolean() ?: true,
                 weatherEffects = data["environmental.weatherEffects"]?.toBoolean() ?: true
             )
-            
+
             // Add resources
             data.filter { it.key.startsWith("environmental.resource.") }.forEach { (key, value) ->
                 val resource = key.removePrefix("environmental.resource.")
                 environmental.resourceAvailability[resource] = value.toIntOrNull() ?: 0
             }
-            
+
             val social = SocialState(
                 publicOpinion = data["social.publicOpinion"]?.toIntOrNull() ?: 60
             )
-            
+
             // Add rumors
             val rumors = mutableListOf<Rumor>()
             var rumorIndex = 0
@@ -122,7 +122,7 @@ data class WorldState(
                 rumorIndex++
             }
             social.rumorMill.addAll(rumors)
-            
+
             // Add events
             val events = mutableListOf<WorldEvent>()
             var eventIndex = 0
@@ -132,7 +132,7 @@ data class WorldState(
                 eventIndex++
             }
             social.currentEvents.addAll(events)
-            
+
             // Create world state
             val worldState = WorldState(
                 id = id,
@@ -141,13 +141,13 @@ data class WorldState(
                 environmental = environmental,
                 social = social
             )
-            
+
             // Add metadata
             data.filter { it.key.startsWith("metadata.") }.forEach { (key, value) ->
                 val metadataKey = key.removePrefix("metadata.")
                 worldState.addMetadata(metadataKey, value)
             }
-            
+
             return worldState
         }
     }
@@ -201,7 +201,7 @@ data class Rumor(
     fun serialize(): String {
         return "$id|$text|$source|$truthValue|$spreadFactor"
     }
-    
+
     companion object {
         /**
          * Deserialize a rumor from a string.
@@ -219,7 +219,7 @@ data class Rumor(
                     spreadFactor = 50
                 )
             }
-            
+
             return Rumor(
                 id = parts[0],
                 text = parts[1],
@@ -250,7 +250,7 @@ data class WorldEvent(
     fun serialize(): String {
         return "$id|$name|$description|${type.name}|$impact|$duration"
     }
-    
+
     companion object {
         /**
          * Deserialize a world event from a string.
@@ -269,7 +269,7 @@ data class WorldEvent(
                     duration = 3
                 )
             }
-            
+
             return WorldEvent(
                 id = parts[0],
                 name = parts[1],

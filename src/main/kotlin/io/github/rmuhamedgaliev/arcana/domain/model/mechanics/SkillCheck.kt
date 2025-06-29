@@ -1,7 +1,7 @@
 package io.github.rmuhamedgaliev.arcana.domain.model.mechanics
 
 import io.github.rmuhamedgaliev.arcana.domain.model.player.Player
-import java.util.UUID
+import java.util.*
 import kotlin.random.Random
 
 /**

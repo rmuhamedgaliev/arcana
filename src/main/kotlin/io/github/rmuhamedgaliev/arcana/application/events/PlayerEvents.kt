@@ -9,7 +9,7 @@ import java.time.Instant
 abstract class PlayerEvent : AbstractEvent() {
     abstract val playerId: String
     abstract val eventType: String
-    
+
     override fun getType(): String = eventType
 }
 

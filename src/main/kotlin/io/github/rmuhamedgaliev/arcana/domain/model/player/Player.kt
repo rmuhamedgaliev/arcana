@@ -2,7 +2,7 @@ package io.github.rmuhamedgaliev.arcana.domain.model.player
 
 import io.github.rmuhamedgaliev.arcana.domain.model.payment.SubscriptionTier
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 /**
  * Class representing a player in the game.
@@ -82,8 +82,8 @@ data class Player(
      * @return True if the subscription is active, false otherwise
      */
     fun hasActiveSubscription(): Boolean {
-        return subscriptionTier != SubscriptionTier.FREE && 
-               (subscriptionExpiresAt == null || subscriptionExpiresAt!!.isAfter(Instant.now()))
+        return subscriptionTier != SubscriptionTier.FREE &&
+                (subscriptionExpiresAt == null || subscriptionExpiresAt!!.isAfter(Instant.now()))
     }
 
     /**
